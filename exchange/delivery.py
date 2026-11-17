@@ -5,6 +5,7 @@ from .audit import write
 from .grants import Grants
 from .policy import Policies
 from .products import Products
+from .repurpose import Repurposing
 
 
 class Delivery:
@@ -13,6 +14,7 @@ class Delivery:
         self.grants = Grants(connection)
         self.policies = Policies(connection)
         self.products = Products(connection)
+        self.repurposing = Repurposing(connection)
 
     def send(self, delivery_id, product_id, revision, recipient, purpose, at):
         existing = self.connection.execute("SELECT * FROM deliveries WHERE id=?", (delivery_id,)).fetchone()
@@ -26,6 +28,19 @@ class Delivery:
         inputs = self.products.inputs(product_id, revision)
         if not inputs:
             raise ValueError("数据产品缺少输入")
+        block = self.repurposing.clearance(product_id, recipient, purpose)
+        if block is not None:
+            reasons = [
+                {
+                    "reason": "purpose",
+                    "request": block["request"],
+                    "request_status": block["status"],
+                    "request_reason": block["reason"],
+                }
+            ]
+            with self.connection:
+                write(self.connection, at, recipient, "delivery.reject", product_id, {"revision": revision, "reasons": reasons})
+            raise PermissionError(reasons)
         reasons, revisions = [], {}
         for asset in inputs:
             source_id = asset["source_id"]

@@ -45,6 +45,13 @@ CREATE TABLE IF NOT EXISTS deliveries (
     input_digest TEXT NOT NULL, policy_revisions TEXT NOT NULL,
     FOREIGN KEY(product_id,product_revision) REFERENCES products(id,revision)
 );
+CREATE TABLE IF NOT EXISTS purpose_requests (
+    id TEXT PRIMARY KEY, delivery_id TEXT NOT NULL REFERENCES deliveries(id),
+    product_id TEXT NOT NULL, product_revision INTEGER NOT NULL,
+    recipient TEXT NOT NULL, purpose TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending', assessment TEXT NOT NULL,
+    reason TEXT, created_at TEXT NOT NULL, decided_at TEXT
+);
 CREATE TABLE IF NOT EXISTS audit (
     id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, actor TEXT NOT NULL,
     action TEXT NOT NULL, subject TEXT NOT NULL, details TEXT NOT NULL

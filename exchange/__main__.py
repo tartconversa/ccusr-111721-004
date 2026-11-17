@@ -16,7 +16,12 @@ def main():
         service.policies.set("甲地", "business", "协作统计", "allow", "2026-11-17", "机构甲")
         revision = service.products.assemble("report", "通行汇总", ["item-1"], "2026-11-17", "机构甲")
         receipt = service.delivery.send("d-1", "report", revision, "机构乙", "协作统计", "2026-11-17")
-        print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+        request = service.repurposing.submit("r-1", "d-1", "商业选址", "2026-11-17", "机构乙")
+        service.grants.issue("g-2", "flow", "机构乙", "商业选址", "2026-12-31", "2026-11-17")
+        service.policies.set("甲地", "business", "商业选址", "allow", "2026-11-17", "机构甲")
+        service.repurposing.approve("r-1", "2026-11-17", "机构甲")
+        repurposed = service.delivery.send("d-2", "report", revision, "机构乙", "商业选址", "2026-11-17")
+        print(json.dumps({"delivery": receipt, "request": request["assessment"], "repurposed": repurposed}, ensure_ascii=False, sort_keys=True))
     finally:
         service.close()
 
